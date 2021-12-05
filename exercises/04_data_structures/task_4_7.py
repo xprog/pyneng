@@ -16,3 +16,8 @@
 """
 
 mac = "AAAA:BBBB:CCCC"
+template = "{:8b}{:8b}{:8b}"
+
+mac_oct = mac.split(":")
+result = template.format(int(mac_oct[0],16), int(mac_oct[1],16), int(mac_oct[2],16))
+print(result)
