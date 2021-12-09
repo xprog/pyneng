@@ -20,3 +20,11 @@
 Ограничение: Все задания надо выполнять используя только пройденные темы.
 
 """
+template = "{:9}{:20}{}"
+
+with open("CAM_table.txt") as f:
+    data = f.readlines()
+    for line in data:
+        lines = line.strip().split()
+        if len(lines) == 4 and len(lines[1].split(".")) == 3:
+            print(template.format(lines[0], lines[1], lines[-1]))

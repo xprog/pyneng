@@ -16,4 +16,22 @@
 
 """
 
+from sys import argv
+
 ignore = ["duplex", "alias", "configuration"]
+
+is_ignore_string = False
+
+with open(argv[1]) as f_src, open(argv[2], "w") as f_dst:
+    line = True
+
+    while line:
+        is_ignore_string = False
+        line = f_src.readline()
+        if not line.strip().startswith("!"):
+            for ign in ignore:
+                if ign in line:
+                    is_ignore_string = True
+
+            if is_ignore_string == False:
+                f_dst.write(line)
