@@ -47,6 +47,7 @@ access_config_2 и убедиться, что в итоговом списке �
 Ограничение: Все задания надо выполнять используя только пройденные темы.
 
 """
+from pprint import pprint
 
 access_mode_template = [
     "switchport mode access",
@@ -75,3 +76,18 @@ def generate_access_config(intf_vlan_mapping, access_template):
 
     Возвращает список всех портов в режиме access с конфигурацией на основе шаблона
     """
+    vlans = []
+
+    for intf, vlan in intf_vlan_mapping.items():
+        vlans.append(f"interface {intf}")
+        for cmd in access_template:
+            if "access vlan" in cmd:
+                vlans.append(f"{cmd} {vlan}")
+            else:
+                vlans.append(f"{cmd}")
+
+    pprint(vlans)
+    return vlans
+
+if __name__ == "__main__":
+    generate_access_config(access_config, access_mode_template)
