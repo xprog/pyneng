@@ -81,3 +81,4 @@ def convert_config_to_dict(config_filename):
 if __name__ == "__main__":
     command_dict = convert_config_to_dict("config_sw1.txt")
     print(command_dict)
+    

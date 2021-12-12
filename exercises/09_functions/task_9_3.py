@@ -43,5 +43,4 @@ def get_int_vlan_map(config_filename):
 
 if __name__ == "__main__":
     access_dict, trunk_dict = get_int_vlan_map("config_sw1.txt")
-
-    # print(access_dict, "\n", trunk_dict)
+    print(access_dict, "\n", trunk_dict)
