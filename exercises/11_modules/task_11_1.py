@@ -34,6 +34,16 @@ R6           Fa 0/2          143           R S I           2811       Fa 0/0
 Ограничение: Все задания надо выполнять используя только пройденные темы.
 """
 
+from pprint import pprint
+
+def is_ignored(ignore_list, line):
+    """
+    проверяет, есть ли в строке line строки из списка ignore_list. Если есть - возвращает True
+    :param ignore_list: список слов, которые надо игнорировать
+    :param line: проверяемая строка
+    :return: Если есть - возвращает True
+    """
+    return any([ignore_word in line for ignore_word in ignore_list])
 
 def parse_cdp_neighbors(command_output):
     """
@@ -43,8 +53,21 @@ def parse_cdp_neighbors(command_output):
     и с файлами и с выводом с оборудования.
     Плюс учимся работать с таким выводом.
     """
+    neighbors = {}
+    local_dev = ""
 
+    ignore_list = "neighbors Capability Switch Router Device Holdtme".split(" ")
+    lines = command_output.split("\n")
+
+    for line in lines:
+        # print(line)
+        if "show cdp neighbors" in line:
+            local_dev = line.split(">")[0]
+        elif line.strip() and not is_ignored(ignore_list, line):
+            dev, local_type, local_intf, *_, port, id = line.split()
+            neighbors[(local_dev, f"{local_type}{local_intf}")] = (dev, f"{port}{id}")
+    return neighbors
 
 if __name__ == "__main__":
     with open("sh_cdp_n_sw1.txt") as f:
-        print(parse_cdp_neighbors(f.read()))
+        pprint(parse_cdp_neighbors(f.read()))
