@@ -34,3 +34,27 @@
  '172.21.41.129', '172.21.41.130', '172.21.41.131', '172.21.41.132']
 
 """
+
+def convert_ranges_to_ip_list(ip_ranges):
+    ip_list = []
+    for ips in ip_ranges:
+        if '-' in ips:
+            ips = ips.replace('-', '.')
+            oct1, oct2, oct3, oct4, *_, oct_last = ips.split('.')
+            count = int (oct_last) - int(oct4) + 1
+
+            for cnt in range(count):
+                oct4_new = int(oct4) + cnt
+                ip = f'{oct1}.{oct2}.{oct3}.{oct4_new}'
+                # print(ip)
+                ip_list.append(ip)
+        else:
+            ip_list.append(ips)
+
+    return ip_list
+
+
+if __name__ == '__main__':
+    ip_ranges = ['192.168.1.190-199', '10.3.1.10-10.3.1.15', '10.10.10.10']
+    ip_list = convert_ranges_to_ip_list(ip_ranges)
+    print(ip_list)

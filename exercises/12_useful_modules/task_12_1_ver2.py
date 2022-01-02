@@ -16,21 +16,29 @@
 """
 import subprocess
 
+
 def ping_ip_addresses(ip_list):
     ip_online = []
     ip_offline = []
+    processes = []
 
     for ip in ip_list:
-        result = subprocess.run(f'ping -n 2 -w 500 {ip}'.split(' '),
+        p = subprocess.Popen(f'ping -n 2 -w 500 {ip}'.split(' '),
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 encoding='UTF-8')
-        if result.returncode == 0:
+        processes.append(p)
+
+    for ip, process in zip(ip_list, processes):
+        returncode = process.wait()
+        if returncode == 0:
             ip_online.append(ip)
         else:
             ip_offline.append(ip)
 
     return ip_online, ip_offline
+
+
 
 if __name__ == '__main__':
     ip_list = ['192.168.1.190', '10.3.1.10', '10.10.10.10']
