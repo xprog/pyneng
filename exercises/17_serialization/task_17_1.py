@@ -36,25 +36,25 @@ import re
 import csv
 
 def write_dhcp_snooping_to_csv(files, output):
-    result_file = open(output, 'w')
+    result_file = open(output, 'w', newline='', encoding='utf-8')
     writer = csv.writer(result_file)
     headers = ['switch','mac','ip','vlan','interface']
     writer.writerow(headers)
 
     for file in files:
         with open(file) as f:
-            switch = re.search(r'(\w+?)_.+', file).group(1)
+            match = re.search(r'(\w+?)_.+', file)
+            if match:
+                switch = match.group(1)
+            else:
+                switch = None
 
             lines = f.read()
             # 00:09:BB:3D:D6:58   10.1.10.2        86250       dhcp-snooping   10    FastEthernet0/1
-            # data = re.finditer(r'^(?P<mac>\d.+?)\s+(?P<ip>\S+).*?(?P<intf>\w+/\d+)$', lines, re.MULTILINE)
             data = re.finditer(r'^(?P<mac>\d.+?)\s+(?P<ip>\S+).*?(?P<vlan>\d+)\s+(?P<intf>\w+/\d+)$', lines, re.MULTILINE)
             for d in data:
                 row = [switch, d['mac'], d['ip'], d['vlan'], d['intf']]
-                # row = [switch, *d]
-                # print(row)
                 writer.writerow(row)
-
 
     result_file.close()
     return None

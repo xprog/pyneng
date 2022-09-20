@@ -24,3 +24,28 @@ R6           Fa 0/2          143           R S I           2811       Fa 0/0
 
 Проверить работу функции на содержимом файла sh_cdp_n_sw1.txt
 """
+
+import re
+
+def parse_sh_cdp_neighbors(command):
+    regexp =r'^(?P<dev>\w+)>' \
+            r'|^(?P<dev_neig>\w+) +(?P<intf_loc>\w+ \S+)\s+\d+.*?(?P<port>\w+ \S+)$'
+    result = {}
+
+    match = re.finditer(regexp, command, re.DOTALL | re.MULTILINE)
+    dev = None
+
+    for m in match:
+        if m.group('dev'):
+            dev = m.group('dev')
+            result[dev] = {}
+        else:
+            result[dev][m.group('intf_loc')] = {m.group('dev_neig') : m.group('port')}
+
+    return result
+
+if __name__ == '__main__':
+    with open('sh_cdp_n_sw1.txt', 'r') as f:
+        command = f.read()
+        result = parse_sh_cdp_neighbors(command)
+        print(result)

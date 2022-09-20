@@ -42,10 +42,41 @@
 
 Кроме того, создан список заголовков (headers), который должен быть записан в CSV.
 """
-
+import re
+import csv
 import glob
 
-sh_version_files = glob.glob("sh_vers*")
-# print(sh_version_files)
+def parse_sh_version(command):
+    regexp = r'Version (\S+)' \
+             r',.*' \
+             r'router uptime is (.*? minutes)' \
+             r'.*?' \
+             r'"(\S+)"'
 
-headers = ["hostname", "ios", "image", "uptime"]
+    data = re.search(regexp, command, re.DOTALL)
+    if data:
+        data = data.group(1, 3, 2)
+        return data
+
+def write_inventory_to_csv(data_filenames, csv_filename):
+    headers = ["hostname", "ios", "image", "uptime"]
+
+    csv_file = open(csv_filename, 'w', newline='')
+    writer = csv.writer(csv_file)
+    writer.writerow(headers)
+
+    for filename in data_filenames:
+        hostname = re.search(r'sh_version_(\w+)\.txt', filename).group(1)
+        with open(filename) as file:
+            data = file.read()
+            result = parse_sh_version(data)
+            inventory_data = [hostname, *result]
+            print(inventory_data)
+            writer.writerow(inventory_data)
+
+    csv_file.close()
+
+if __name__ == '__main__':
+    sh_version_files = glob.glob("sh_vers*")
+    write_inventory_to_csv(sh_version_files, 'routers_inventory.csv')
+
