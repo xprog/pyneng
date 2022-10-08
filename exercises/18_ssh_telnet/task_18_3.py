@@ -48,5 +48,36 @@ Out[16]: 'config term\nEnter configuration commands, one per line.  End with CNT
 
 """
 
+from task_18_1 import send_show_command
+from task_18_2 import send_config_commands
+
 commands = ["logging 10.255.255.1", "logging buffered 20010", "no logging console"]
 command = "sh ip int br"
+
+import yaml
+
+def send_commands(device, **commands):
+    result = ''
+    if 'show' in commands and 'config' in commands:
+        raise ValueError
+    elif 'show' in commands:
+        print(commands, commands['show'])
+        result = send_show_command(device, commands['show'])
+    elif 'config' in commands:
+        result = send_config_commands(device, commands['config'])
+    else:
+        raise TypeError
+    return result
+
+if __name__ == "__main__":
+    commands = ["logging 10.255.255.1", "logging buffered 20010", "no logging console"]
+    command = "sh ip int br"
+
+    with open("devices.yaml") as f:
+        devices = yaml.safe_load(f)
+        for dev in devices:
+
+            send_commands(dev, show=command)
+            send_commands(dev, config=commands)
+            send_commands(dev, commands)
+            send_commands(dev, show=command, config=commands)
