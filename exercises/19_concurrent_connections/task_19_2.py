@@ -38,6 +38,7 @@ from concurrent.futures import ThreadPoolExecutor
 from itertools import repeat
 import netmiko
 import yaml
+import logging
 
 def send_show_command_to_device(device, command):
     try:
@@ -47,17 +48,18 @@ def send_show_command_to_device(device, command):
             prompt = ssh.find_prompt()
             return f"{prompt}{command}\n{result}\n"
     except netmiko.NetmikoTimeoutException as error:
-        print(f'Не удалось подключиться к {device["host"]}')
+        logging.error(f'Не удалось подключиться к {device["host"]}')
     except netmiko.NetmikoAuthenticationException as error:
-        print(f'Ошибка аутентификации с {device["host"]}')
-
+        logging.error(f'Ошибка аутентификации с {device["host"]}')
 
 def send_show_command_to_devices(devices, command, filename, limit=3):
     with ThreadPoolExecutor(max_workers=limit) as executor:
         result = executor.map(send_show_command_to_device, devices, repeat(command))
         with open(filename, 'w') as file_result:
-            for res in result:
-                file_result.write(res)
+            if result:
+                for res in result:
+                    if res:
+                        file_result.write(res)
 
 
 if __name__ == '__main__':
