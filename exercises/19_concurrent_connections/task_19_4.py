@@ -40,7 +40,7 @@ Ethernet0/0                192.168.100.1   YES NVRAM  up                    up
 Ethernet0/1                192.168.200.1   YES NVRAM  up                    up
 R2#sh arp
 Protocol  Address          Age (min)  Hardware Addr   Type   Interface
-Internet  192.168.100.1          76   aabb.cc00.6500  ARPA   Ethernet0/0
+Int  ernet  192.168.100.1          76   aabb.cc00.6500  ARPA   Ethernet0/0
 Internet  192.168.100.2           -   aabb.cc00.6600  ARPA   Ethernet0/0
 Internet  192.168.100.3         173   aabb.cc00.6700  ARPA   Ethernet0/0
 R3#sh ip int br
@@ -105,3 +105,54 @@ R3#
 
 Для выполнения задания можно создавать любые дополнительные функции.
 """
+from concurrent.futures import ThreadPoolExecutor
+import netmiko
+import yaml
+import logging
+
+commands = ['router ospf 55', 'network 0.0.0.0 255.255.255.255 area 0']
+
+logging.getLogger("paramiko").setLevel(logging.WARNING)
+
+logging.basicConfig(
+    format = '%(threadName)s %(name)s %(levelname)s: %(message)s',
+    level=logging.INFO)
+
+def send_command_to_device(device, show=None, config=None):
+    try:
+        if show and config:
+            raise ValueError('должен передаваться только один из аргументов: show, config')
+        elif not show and not config:
+            raise ValueError('должен передаваться один из аргументов: show, config')
+        else:
+            with netmiko.ConnectHandler(**device) as ssh:
+                ssh.enable()
+                prompt = ssh.find_prompt()
+                if show:
+                    result = ssh.send_command(show)
+                    return f"{prompt}{show}\n{result}\n"
+                else:
+                    result = ssh.send_config_set(config)
+                    return f"{prompt}{config}\n{result}\n"
+    except netmiko.NetmikoTimeoutException as error:
+        logging.error(f'Не удалось подключиться к {device["host"]}')
+    except netmiko.NetmikoAuthenticationException as error:
+        logging.error(f'Ошибка аутентификации с {device["host"]}')
+
+
+def send_commands_to_devices(devices, filename, *, show=None, config=None, limit=3):
+    with ThreadPoolExecutor(max_workers=limit) as executor:
+        with open(filename, 'w') as file_result:
+            for device in devices:
+                future = executor.submit(send_command_to_device, device, show=show, config=config)
+                if future.result():
+                    file_result.write(future.result())
+
+
+if __name__ == '__main__':
+    with open('devices.yaml') as file:
+        devices = yaml.safe_load(file)
+
+        send_commands_to_devices(devices, 'result.txt', show='sh clock')
+        # send_commands_to_devices(devices, 'result.txt', config='logging 10.5.5.5')
+        # send_commands_to_devices(devices, 'result.txt', config=commands)
