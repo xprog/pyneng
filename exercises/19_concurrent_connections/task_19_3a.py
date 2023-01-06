@@ -51,8 +51,52 @@ O        10.30.0.0/24 [110/20] via 192.168.100.1, 07:12:03, Ethernet0/0
 
 # Этот словарь нужен только для проверки работа кода, в нем можно менять IP-адреса
 # тест берет адреса из файла devices.yaml
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import netmiko
+import yaml
+import logging
+
 commands = {
     "192.168.100.3": ["sh ip int br", "sh ip route | ex -"],
     "192.168.100.1": ["sh ip int br", "sh int desc"],
     "192.168.100.2": ["sh int desc"],
 }
+
+logging.getLogger("paramiko").setLevel(logging.WARNING)
+
+logging.basicConfig(
+    format = '%(threadName)s %(name)s %(levelname)s: %(message)s',
+    level=logging.INFO)
+
+def send_command_to_device(device, commands):
+    try:
+        with netmiko.ConnectHandler(**device) as ssh:
+            results = ''
+            for command in commands:
+                result = ssh.send_command(command)
+                ssh.enable()
+                prompt = ssh.find_prompt()
+                results += f"{prompt}{command}\n{result}\n"
+            return results
+    except netmiko.NetmikoTimeoutException as error:
+        logging.error(f'Не удалось подключиться к {device["host"]}')
+    except netmiko.NetmikoAuthenticationException as error:
+        logging.error(f'Ошибка аутентификации с {device["host"]}')
+
+
+def send_command_to_devices(devices, commands_dict, filename, limit=3):
+    with ThreadPoolExecutor(max_workers=limit) as executor:
+        futures = []
+        for device in devices:
+            future = executor.submit(send_command_to_device, device, commands_dict[device['host']])
+            futures.append(future)
+        with open(filename, 'w') as file_result:
+            for future in as_completed(futures):
+                file_result.write(future.result())
+
+
+if __name__ == '__main__':
+    with open('devices.yaml') as file:
+        devices = yaml.safe_load(file)
+        send_command_to_devices(devices, commands, 'file_result.txt')
