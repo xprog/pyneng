@@ -28,6 +28,9 @@ cisco_vpn_1.txt и cisco_vpn_2.txt.
 cisco_vpn_1.txt и cisco_vpn_2.txt.
 """
 
+import yaml
+from task_20_1 import generate_config
+
 data = {
     "tun_num": 10,
     "wan_ip_1": "192.168.100.1",
@@ -35,3 +38,23 @@ data = {
     "tun_ip_1": "10.0.1.1 255.255.255.252",
     "tun_ip_2": "10.0.1.2 255.255.255.252",
 }
+
+# data_file = "data_files/add_vlan_to_switch.yaml"
+# template_file = "templates/add_vlan_to_switch.txt"
+# with open(data_file) as f:
+#     data = yaml.safe_load(f)
+#
+#     config = generate_config(template_file, data)
+#     print(config)
+
+def create_vpn_config(template1, template2, data_dict):
+    config1 = generate_config(template1, data_dict)
+    config2 = generate_config(template2, data_dict)
+    return config1, config2
+
+if __name__ == '__main__':
+    config1, config2 = create_vpn_config('templates/gre_ipsec_vpn_1.txt',
+                      'templates/gre_ipsec_vpn_2.txt',
+                      data)
+    print(config1)
+    print(config2)
