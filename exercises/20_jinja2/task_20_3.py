@@ -33,7 +33,7 @@
 
 Проверьте получившийся шаблон templates/ospf.txt, на данных в файле data_files/ospf.yml,
 с помощью функции generate_config из задания 20.1.
-Не копируйте код функции generate_config.
+Не копируйте код функции generate_config.z
 
 В результате должна получиться конфигурация такого вида
 (команды в режиме router ospf не обязательно должны быть в таком порядке,
@@ -55,3 +55,14 @@ interface Fa0/1.100
 interface Fa0/1.200
  ip ospf hello-interval 1
 """
+
+import yaml
+from task_20_1 import generate_config
+
+template_file = "templates/ospf.txt"
+data_file = "data_files/ospf.yml"
+with open(data_file) as f:
+    data = yaml.safe_load(f)
+
+    config = generate_config(template_file, data)
+    print(config)
